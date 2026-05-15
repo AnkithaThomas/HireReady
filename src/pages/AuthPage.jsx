@@ -53,6 +53,12 @@ export default function AuthPage({ onLogin }) {
       setLoading(false);
     }
   }
+  
+  function handleKeyDown(e) {
+    if (e.key === "Enter") {
+      mode === "login" ? handleLogin() : handleSignUp();
+    }
+  }
 
   if (needsConfirmation) {
     return (
@@ -106,6 +112,7 @@ export default function AuthPage({ onLogin }) {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
           <input
             className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-indigo-500"
@@ -113,6 +120,7 @@ export default function AuthPage({ onLogin }) {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
         </div>
 

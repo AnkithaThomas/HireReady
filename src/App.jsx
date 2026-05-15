@@ -3,7 +3,7 @@ import { Amplify } from "aws-amplify";
 import { getCurrentUser } from "aws-amplify/auth";
 import awsConfig from "./aws-exports";
 import LandingPage from "./pages/LandingPage";
-import AuthPage from "./pages/LandingPage";
+import AuthPage from "./pages/AuthPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import Dashboard from "./pages/Dashboard";
 
@@ -36,7 +36,7 @@ export default function App() {
   if (!user && !showAuth) return <LandingPage onShowAuth={() => setShowAuth(true)} />;
 
   if (!user && showAuth) return <AuthPage onLogin={checkUser} />;
-  
+
   if (!isOnboarded) return <OnboardingPage user={user} onComplete={() => {
     localStorage.setItem(`onboarded_${user.userId}`, "true");
     setIsOnboarded(true);
