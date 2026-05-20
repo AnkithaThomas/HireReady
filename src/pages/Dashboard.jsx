@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
 
 const API_URL = "https://hsztv5hu12.execute-api.us-east-2.amazonaws.com";
@@ -14,12 +14,15 @@ export default function Dashboard({ user }) {
   const [selectedPathway, setSelectedPathway] = useState(null);
   const [currentWeek, setCurrentWeek] = useState(1);
   const [completedTasks, setCompletedTasks] = useState({});
+  const [selectedCourses, setSelectedCourses] = useState([]);
+  const [customCourses, setCustomCourses] = useState([]);
+  const [customCourseName, setCustomCourseName] = useState("");
+  const [customCourseUrl, setCustomCourseUrl] = useState("");
 
   async function handleFindResources() {
     if (!jobDescription) return;
     setLoading(true);
     setLoadingMessage("Analyzing your resume and finding resources...");
-
     try {
       const response = await axios.post(`${API_URL}/find-resources`, {
         userId: user.userId,
@@ -37,13 +40,17 @@ export default function Dashboard({ user }) {
   async function handleGeneratePlan(usePaidCourses) {
     setLoading(true);
     setLoadingMessage("Building your personalized 2 week plan...");
-
     try {
       const response = await axios.post(`${API_URL}/generate-roadmap`, {
         userId: user.userId,
         jobDescription,
         skillGaps: resources.skillGaps,
-        paidCourses: resources.paidCourses,
+        paidCourses: usePaidCourses
+          ? [
+              ...resources.paidCourses.filter((_, i) => selectedCourses.includes(i)),
+              ...customCourses,
+            ]
+          : customCourses,
         freeVideos: resources.freeVideos,
         usePaidCourses,
       });
@@ -69,10 +76,7 @@ export default function Dashboard({ user }) {
 
   function toggleTask(dayKey, taskIndex) {
     const key = `${dayKey}-${taskIndex}`;
-    setCompletedTasks(prev => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
+    setCompletedTasks(prev => ({ ...prev, [key]: !prev[key] }));
   }
 
   function isDayComplete(dayKey, tasks) {
@@ -83,6 +87,23 @@ export default function Dashboard({ user }) {
     return week.days.every(day => isDayComplete(`w${week.week}d${day.day}`, day.tasks));
   }
 
+  function toggleCourse(index) {
+    setSelectedCourses(prev =>
+      prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+    );
+  }
+
+  function handleAddCustomCourse() {
+    if (!customCourseName || !customCourseUrl) return;
+    setCustomCourses([...customCourses, {
+      title: customCourseName,
+      link: customCourseUrl,
+      skill: "custom",
+    }]);
+    setCustomCourseName("");
+    setCustomCourseUrl("");
+  }
+
   if (selectedPathway) {
     const weeks = selectedPathway.plan.weeks;
     const currentWeekData = weeks[currentWeek - 1];
@@ -91,8 +112,6 @@ export default function Dashboard({ user }) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-indigo-50 px-4 py-8">
         <div className="mx-auto max-w-6xl">
-
-          {/* Header */}
           <div className="mb-8 flex items-center justify-between">
             <button
               onClick={() => setSelectedPathway(null)}
@@ -104,7 +123,6 @@ export default function Dashboard({ user }) {
             <div />
           </div>
 
-          {/* Week Navigation */}
           <div className="mb-6 flex items-center justify-center gap-4">
             <button
               onClick={() => setCurrentWeek(1)}
@@ -113,21 +131,17 @@ export default function Dashboard({ user }) {
               Week 1
             </button>
             <button
-              onClick={() => {
-                if (isCurrentWeekDone || currentWeek === 2) setCurrentWeek(2);
-              }}
+              onClick={() => { if (isWeekComplete(weeks[0]) || currentWeek === 2) setCurrentWeek(2); }}
               className={`rounded-xl px-6 py-2 text-sm font-bold transition ${currentWeek === 2 ? "bg-indigo-600 text-white" : isWeekComplete(weeks[0]) ? "border border-slate-300 text-slate-600" : "border border-slate-200 text-slate-300 cursor-not-allowed"}`}
             >
               Week 2 {!isWeekComplete(weeks[0]) && "🔒"}
             </button>
           </div>
 
-          {/* Days Grid */}
           <div className="grid grid-cols-7 gap-3">
             {currentWeekData.days.map((day) => {
               const dayKey = `w${currentWeek}d${day.day}`;
               const dayDone = isDayComplete(dayKey, day.tasks);
-
               return (
                 <div
                   key={day.day}
@@ -135,12 +149,10 @@ export default function Dashboard({ user }) {
                 >
                   <p className="text-xs font-bold text-indigo-600">Day {day.day}</p>
                   <p className="mt-1 text-xs font-semibold text-slate-700 leading-tight">{day.title}</p>
-
                   <div className="mt-3 space-y-2">
                     {day.tasks.map((task, taskIndex) => {
                       const taskKey = `${dayKey}-${taskIndex}`;
                       const done = completedTasks[taskKey];
-
                       return (
                         <div key={taskIndex} className="flex items-start gap-2">
                           <input
@@ -158,7 +170,7 @@ export default function Dashboard({ user }) {
                                 className={`text-xs leading-tight ${done ? "line-through text-slate-400" : "text-indigo-600 hover:underline"}`}
                               >
                                 {task.title}
-                               </a>
+                              </a>
                             ) : (
                               <p className={`text-xs leading-tight ${done ? "line-through text-slate-400" : "text-slate-600"}`}>
                                 {task.title}
@@ -175,7 +187,6 @@ export default function Dashboard({ user }) {
             })}
           </div>
 
-          {/* Week completion message */}
           {isCurrentWeekDone && currentWeek === 1 && (
             <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-center">
               <p className="font-bold text-emerald-700">Week 1 Complete! 🎉</p>
@@ -188,7 +199,6 @@ export default function Dashboard({ user }) {
               </button>
             </div>
           )}
-
         </div>
       </div>
     );
@@ -197,14 +207,11 @@ export default function Dashboard({ user }) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-indigo-50 px-4 py-8">
       <div className="mx-auto max-w-4xl">
-
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-black text-slate-900">My Career Pathways</h1>
           <p className="mt-1 text-slate-600">Track your progress toward your dream role</p>
         </div>
 
-        {/* Create New Pathway Button */}
         {!showNewPathway && (
           <button
             onClick={() => setShowNewPathway(true)}
@@ -214,12 +221,10 @@ export default function Dashboard({ user }) {
           </button>
         )}
 
-        {/* New Pathway Form */}
         {showNewPathway && !resources && !loading && (
           <div className="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_22px_65px_rgba(15,23,42,0.12)]">
             <h2 className="text-lg font-black text-slate-900">Create New Career Pathway</h2>
             <p className="mt-1 text-sm text-slate-600">Paste the job description you want to prepare for</p>
-
             <textarea
               value={jobDescription}
               onChange={(e) => setJobDescription(e.target.value)}
@@ -227,7 +232,6 @@ export default function Dashboard({ user }) {
               rows={8}
               className="mt-4 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-indigo-500 resize-none"
             />
-
             <div className="mt-4 flex gap-3">
               <button
                 onClick={handleFindResources}
@@ -246,7 +250,6 @@ export default function Dashboard({ user }) {
           </div>
         )}
 
-        {/* Loading */}
         {loading && (
           <div className="mb-8 rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
             <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
@@ -254,52 +257,30 @@ export default function Dashboard({ user }) {
           </div>
         )}
 
-        {/* Gap Analysis Screen */}
         {resources && showGapAnalysis && !loading && (
           <div className="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_22px_65px_rgba(15,23,42,0.12)]">
             <h2 className="text-lg font-black text-slate-900">Here's where you stand</h2>
-            <p className="mt-1 text-sm text-slate-600">Based on your resume vs this job description</p>
-
-            <div className="mt-6 space-y-6">
-
-              {/* What job requires */}
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-3">What this job requires</p>
-                <div className="flex flex-wrap gap-2">
-                  {resources.gapAnalysis.jobRequires.map((skill, i) => (
-                    <span key={i} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
+            <p className="mt-1 text-sm text-slate-600">We analyzed your resume against this job description</p>
+            <div className="mt-6 space-y-5">
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">What this job is looking for</p>
+                <p className="text-sm text-slate-700 leading-relaxed">
+                  This role requires knowledge of <strong>{resources.gapAnalysis.jobRequires.join(", ")}</strong>.
+                </p>
               </div>
-
-              {/* What user has */}
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-emerald-600 mb-3">What you already have ✓</p>
-                <div className="flex flex-wrap gap-2">
-                  {resources.gapAnalysis.userHas.map((skill, i) => (
-                    <span key={i} className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                      ✓ {skill}
-                    </span>
-                  ))}
-                </div>
+              <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-emerald-600 mb-2">Skills you bring to this role</p>
+                <p className="text-sm text-emerald-800 leading-relaxed">
+                  <strong>{resources.gapAnalysis.userHas.join(", ")}</strong>
+                </p>
               </div>
-
-              {/* Skill gaps */}
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-red-500 mb-3">What you need to work on</p>
-                <div className="flex flex-wrap gap-2">
-                  {resources.gapAnalysis.skillGaps.map((skill, i) => (
-                    <span key={i} className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
-                      ✗ {skill}
-                    </span>
-                  ))}
-                </div>
+              <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-indigo-600 mb-2">Focus on these to close the gap</p>
+                <p className="text-sm text-indigo-800 leading-relaxed">
+                  <strong>{resources.gapAnalysis.skillGaps.join(", ")}</strong>
+                </p>
               </div>
-
             </div>
-
             <button
               onClick={() => setShowGapAnalysis(false)}
               className="mt-6 w-full rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 py-3 text-sm font-bold text-white transition hover:scale-[1.02]"
@@ -309,43 +290,103 @@ export default function Dashboard({ user }) {
           </div>
         )}
 
-        {/* Resources Found */}
         {resources && !showGapAnalysis && !loading && (
           <div className="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_22px_65px_rgba(15,23,42,0.12)]">
             <h2 className="text-lg font-black text-slate-900">We found premium resources for you</h2>
-            <p className="mt-1 text-sm text-slate-600">Based on your skill gaps: {resources.skillGaps.join(", ")}</p>
-
+            <p className="mt-1 text-sm text-slate-600">Select the courses you want included in your plan</p>
             <div className="mt-4 space-y-3">
               {resources.paidCourses.map((course, i) => (
-                <div key={i} className="rounded-xl border border-slate-200 p-3">
-                  <p className="text-sm font-semibold text-slate-800">{course.title}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{course.skill}</p>
-                  <a href={course.link} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-600 hover:underline">
-                    View Course →
-                  </a>
+                <div
+                  key={i}
+                  className={`rounded-xl border p-3 cursor-pointer transition ${selectedCourses.includes(i) ? "border-indigo-300 bg-indigo-50" : "border-slate-200 bg-white"}`}
+                  onClick={() => toggleCourse(i)}
+                >
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedCourses.includes(i)}
+                      onChange={() => toggleCourse(i)}
+                      className="mt-0.5 accent-indigo-600"
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-slate-800">{course.title}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{course.skill}</p>
+                      <a
+                        href={course.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-indigo-600 hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        View Course →
+                      </a>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
 
-            <p className="mt-6 text-sm font-semibold text-slate-700">Include these premium courses in your plan?</p>
-            <div className="mt-3 flex gap-3">
+            <div className="mt-6">
+              <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-3">Add your own course</p>
+              <div className="flex gap-2">
+                <input
+                  placeholder="Course name"
+                  value={customCourseName}
+                  onChange={(e) => setCustomCourseName(e.target.value)}
+                  className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500"
+                />
+                <input
+                  placeholder="URL"
+                  value={customCourseUrl}
+                  onChange={(e) => setCustomCourseUrl(e.target.value)}
+                  className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500"
+                />
+                <button
+                  onClick={handleAddCustomCourse}
+                  className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200 transition"
+                >
+                  Add
+                </button>
+              </div>
+              {customCourses.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {customCourses.map((course, i) => (
+                    <div key={i} className="rounded-xl border border-indigo-200 bg-indigo-50 p-3 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800">{course.title}</p>
+                        <a href={course.link} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-600 hover:underline">
+                          {course.link}
+                        </a>
+                      </div>
+                      <button
+                        onClick={() => setCustomCourses(customCourses.filter((_, idx) => idx !== i))}
+                        className="text-xs text-red-400 hover:text-red-600"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex gap-3">
               <button
                 onClick={() => handleGeneratePlan(true)}
                 className="flex-1 rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white transition hover:bg-indigo-700"
               >
-                Yes, include them
+                Build My Plan →
               </button>
               <button
                 onClick={() => handleGeneratePlan(false)}
                 className="flex-1 rounded-xl border border-slate-300 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
               >
-                No, use free resources
+                Use free resources only
               </button>
             </div>
           </div>
         )}
 
-        {/* Existing Pathways */}
         {pathways.length > 0 && (
           <div className="grid gap-4 sm:grid-cols-2">
             {pathways.map((pathway) => (
@@ -365,7 +406,6 @@ export default function Dashboard({ user }) {
             ))}
           </div>
         )}
-
       </div>
     </div>
   );
