@@ -20,16 +20,20 @@ export default function App() {
   }, []);
 
   async function checkUser() {
-    try {
-      const currentUser = await getCurrentUser();
-      setUser(currentUser);
-      setIsOnboarded(localStorage.getItem(`onboarded_${currentUser.userId}`) === "true");
-    } catch {
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
+  try {
+    const currentUser = await getCurrentUser();
+    const onboardedValue = localStorage.getItem(`onboarded_${currentUser.userId}`);
+    console.log("onboarded value:", onboardedValue);
+    console.log("isOnboarded result:", onboardedValue === "true");
+    setUser(currentUser);
+    setIsOnboarded(onboardedValue === "true");
+  } catch {
+    setUser(null);
+  } finally {
+    setLoading(false);
   }
+}
+
 
   if (loading) return <div>Loading...</div>;
 

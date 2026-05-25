@@ -123,19 +123,17 @@ export default function Dashboard({ user }) {
             <div />
           </div>
 
-          <div className="mb-6 flex items-center justify-center gap-4">
-            <button
-              onClick={() => setCurrentWeek(1)}
-              className={`rounded-xl px-6 py-2 text-sm font-bold transition ${currentWeek === 1 ? "bg-indigo-600 text-white" : "border border-slate-300 text-slate-600"}`}
-            >
-              Week 1
-            </button>
-            <button
-              onClick={() => { if (isWeekComplete(weeks[0]) || currentWeek === 2) setCurrentWeek(2); }}
-              className={`rounded-xl px-6 py-2 text-sm font-bold transition ${currentWeek === 2 ? "bg-indigo-600 text-white" : isWeekComplete(weeks[0]) ? "border border-slate-300 text-slate-600" : "border border-slate-200 text-slate-300 cursor-not-allowed"}`}
-            >
-              Week 2 {!isWeekComplete(weeks[0]) && "🔒"}
-            </button>
+          {/* Week Navigation */}
+          <div className="mb-6 flex items-center justify-center gap-3 flex-wrap">
+            {weeks.map((week) => (
+              <button
+                key={week.week}
+                onClick={() => setCurrentWeek(week.week)}
+                className={`rounded-xl px-6 py-2 text-sm font-bold transition ${currentWeek === week.week ? "bg-indigo-600 text-white" : "border border-slate-300 text-slate-600 hover:border-indigo-400"}`}
+              >
+                Week {week.week}
+              </button>
+            ))}
           </div>
 
           <div className="grid grid-cols-7 gap-3">
@@ -186,19 +184,6 @@ export default function Dashboard({ user }) {
               );
             })}
           </div>
-
-          {isCurrentWeekDone && currentWeek === 1 && (
-            <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-center">
-              <p className="font-bold text-emerald-700">Week 1 Complete! 🎉</p>
-              <p className="text-sm text-emerald-600">You can now unlock Week 2</p>
-              <button
-                onClick={() => setCurrentWeek(2)}
-                className="mt-3 rounded-xl bg-emerald-600 px-6 py-2 text-sm font-bold text-white"
-              >
-                Start Week 2 →
-              </button>
-            </div>
-          )}
         </div>
       </div>
     );
