@@ -8,6 +8,7 @@ import AuthPage from "./pages/AuthPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import Dashboard from "./pages/Dashboard";
 import PathwayView from "./pages/PathwayView";
+import InterviewPage from "./pages/InterviewPage";
 
 Amplify.configure(awsConfig);
 
@@ -78,6 +79,14 @@ export default function App() {
           !user ? <Navigate to="/auth" /> :
           !isOnboarded ? <Navigate to="/onboarding" /> :
           <PathwayView user={user} onLogout={handleLogout} />
+        }
+      />
+      <Route
+        path="/interview"
+        element={
+          !user ? <Navigate to="/auth" /> :
+          !isOnboarded ? <Navigate to="/onboarding" /> :
+          <InterviewPage />
         }
       />
       <Route path="*" element={<Navigate to="/" />} />
