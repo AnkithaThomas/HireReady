@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Amplify } from "aws-amplify";
-import { getCurrentUser } from "aws-amplify/auth";
+import { getCurrentUser, signOut } from "aws-amplify/auth";
 import awsConfig from "./aws-exports";
 import LandingPage from "./pages/LandingPage";
 import AuthPage from "./pages/AuthPage";
@@ -44,5 +44,12 @@ export default function App() {
     setIsOnboarded(true);
   }} />;
 
-  return <Dashboard user={user} />;
+  async function handleLogout() {
+    await signOut();
+    setUser(null);
+    setIsOnboarded(false);
+    setShowAuth(false);
+  }
+
+  return <Dashboard user={user} onLogout={handleLogout} />;
 }

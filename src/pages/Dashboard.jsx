@@ -3,7 +3,7 @@ import axios from "axios";
 
 const API_URL = "https://hsztv5hu12.execute-api.us-east-2.amazonaws.com";
 
-export default function Dashboard({ user }) {
+export default function Dashboard({ user, onLogout }) {
   const [pathways, setPathways] = useState(() => {
     try {
       const saved = localStorage.getItem(`pathways_${user.userId}`);
@@ -204,7 +204,12 @@ export default function Dashboard({ user }) {
               ← Back to Pathways
             </button>
             <h1 className="text-xl font-black text-slate-900">Your {totalWeeks} Week Plan</h1>
-            <div />
+            <button
+              onClick={onLogout}
+              className="text-sm font-semibold text-slate-400 hover:text-slate-700"
+            >
+              Sign out
+            </button>
           </div>
 
           {/* Week Navigation */}
@@ -283,9 +288,17 @@ export default function Dashboard({ user }) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-indigo-50 px-4 py-8">
       <div className="mx-auto max-w-4xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-black text-slate-900">My Career Pathways</h1>
-          <p className="mt-1 text-slate-600">Track your progress toward your dream role</p>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-black text-slate-900">My Career Pathways</h1>
+            <p className="mt-1 text-slate-600">Track your progress toward your dream role</p>
+          </div>
+          <button
+            onClick={onLogout}
+            className="text-sm font-semibold text-slate-400 hover:text-slate-700"
+          >
+            Sign out
+          </button>
         </div>
 
         {!showNewPathway && (
