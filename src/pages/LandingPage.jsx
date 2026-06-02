@@ -36,7 +36,11 @@ const roadmapPreview = [
   },
 ];
 
-export default function LandingPage({ onShowAuth }) {
+import { useNavigate } from "react-router-dom";
+
+export default function LandingPage() {
+  const navigate = useNavigate();
+  const onShowAuth = () => navigate("/auth");
   return (
     <main className="relative overflow-hidden bg-gradient-to-b from-sky-50 via-white to-indigo-50 text-slate-900">
       <div className="pointer-events-none absolute inset-0 -z-10">
