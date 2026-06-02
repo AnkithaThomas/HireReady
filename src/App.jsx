@@ -23,8 +23,6 @@ export default function App() {
   try {
     const currentUser = await getCurrentUser();
     const onboardedValue = localStorage.getItem(`onboarded_${currentUser.userId}`);
-    console.log("onboarded value:", onboardedValue);
-    console.log("isOnboarded result:", onboardedValue === "true");
     setUser(currentUser);
     setIsOnboarded(onboardedValue === "true");
   } catch {
