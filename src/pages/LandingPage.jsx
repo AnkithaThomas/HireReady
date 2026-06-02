@@ -65,7 +65,10 @@ export default function LandingPage({ onShowAuth }) {
               <button onClick={onShowAuth} className="rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 px-8 py-3.5 text-sm font-bold text-white shadow-[0_14px_35px_rgba(37,99,235,0.3)] transition hover:scale-[1.02]">
                   Get Started Free
               </button>
-              <button className="rounded-xl border border-slate-300 bg-white px-8 py-3.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50">
+              <button
+                onClick={() => document.getElementById("how-it-works").scrollIntoView({ behavior: "smooth" })}
+                className="rounded-xl border border-slate-300 bg-white px-8 py-3.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+              >
                 See How It Works
               </button>
             </div>
@@ -125,7 +128,7 @@ export default function LandingPage({ onShowAuth }) {
           </div>
         </section>
 
-        <section className="mt-20 rounded-3xl border border-slate-200 bg-white px-6 py-10 shadow-[0_18px_45px_rgba(15,23,42,0.08)] sm:px-10">
+        <section id="how-it-works" className="mt-20 rounded-3xl border border-slate-200 bg-white px-6 py-10 shadow-[0_18px_45px_rgba(15,23,42,0.08)] sm:px-10">
           <div className="mb-8 text-center">
             <h3 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">How it works</h3>
             <p className="mt-2 text-slate-600">From resume upload to ready-to-execute roadmap in minutes.</p>

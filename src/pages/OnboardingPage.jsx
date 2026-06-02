@@ -1,7 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-
-const API_URL = "https://hsztv5hu12.execute-api.us-east-2.amazonaws.com";
+import { API_URL } from "../config";
 
 export default function OnboardingPage({ user, onComplete }) {
   const [resumeFile, setResumeFile] = useState(null);
